@@ -1,11 +1,20 @@
-angular.module("customBind", []).factory('ProjectFactory', ['$filter', '$http', 'LawnchairFactory', '$rootScope',
-    function($filter, $http, LawnchairFactory, $rootScope) {
+angular.module("customBind", []).factory('customBind', ['$rootScope',
 
+    function($rootScope) {
 
         return {
-            setListener: function(delim1, delim2, trigger, scope){
-                var boundScope = scope ? scope : $rootScope;
-                boundScope.$on(trigger, function(){
+            set: function bindFn(delim1, delim2, trigger){
+                delim1 = delim1.replace(/(\}|\/|\]|\[|\$|\\(?!\\))/g,"\\$1"); //add slashes to regex special chars
+                delim2 = delim2.replace(/(\}|\/|\]|\[|\$|\\(?!\\))/g,"\\$1"); //add slashes to regex special chars
+                //We don't want the same delimiters and trigger being set multiple times
+                var memoize = JSON.stringify(arguments);
+                if(bindFn[memoize])
+                    return;
+                else
+                    bindFn[memoize] = true;
+
+                //On event, go through DOM and compile all delimited text attributes
+                $rootScope.$on(trigger, function(){
 
                     var startTime = (new Date()).getTime();
                     walkDOM(angular.element('[ng-app]')[0], function(node){
@@ -48,8 +57,6 @@ angular.module("customBind", []).factory('ProjectFactory', ['$filter', '$http', 
 
                     console.debug(endTime - startTime)
                 });
-
-
             }
         };
 
@@ -67,6 +74,3 @@ angular.module("customBind", []).factory('ProjectFactory', ['$filter', '$http', 
 
 
     }])
-
-
-
